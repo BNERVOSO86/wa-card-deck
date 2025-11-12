@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           criadoem: string | null
           id: number
+          msgdia: number | null
           nome: string | null
           numero: string | null
           saldo: string | null
@@ -37,6 +38,7 @@ export type Database = {
           created_at?: string
           criadoem?: string | null
           id?: number
+          msgdia?: number | null
           nome?: string | null
           numero?: string | null
           saldo?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           created_at?: string
           criadoem?: string | null
           id?: number
+          msgdia?: number | null
           nome?: string | null
           numero?: string | null
           saldo?: string | null

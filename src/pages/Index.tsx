@@ -1,75 +1,50 @@
 import { useState } from "react";
-import { Search, RefreshCw, Plus, ChevronDown } from "lucide-react";
+import { Search, RefreshCw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneCard } from "@/components/PhoneCard";
+import { AddPhoneDialog } from "@/components/AddPhoneDialog";
+import { EditPhoneDialog } from "@/components/EditPhoneDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const mockPhones = [
-  {
-    phoneNumber: "+55 11 98765-4321",
-    webhook: "https://api.example.com/webhook/abc123",
-    lastRecharge: "15/01/2024",
-    balance: 250.00,
-    messagesDay: 45,
-    messagesTotal: 1250,
-    contacts: 328,
-    status: "connected" as const,
-    userName: "Davidson"
-  },
-  {
-    phoneNumber: "+55 21 97654-3210",
-    webhook: "https://api.example.com/webhook/def456",
-    lastRecharge: "10/01/2024",
-    balance: 150.50,
-    messagesDay: 23,
-    messagesTotal: 890,
-    contacts: 215,
-    status: "connected" as const,
-    userName: "Davidson"
-  },
-  {
-    phoneNumber: "+55 31 96543-2109",
-    webhook: "https://api.example.com/webhook/ghi789",
-    lastRecharge: "05/01/2024",
-    balance: 75.00,
-    messagesDay: 0,
-    messagesTotal: 456,
-    contacts: 142,
-    status: "disconnected" as const,
-    userName: "Davidson"
-  },
-  {
-    phoneNumber: "+55 41 95432-1098",
-    webhook: "https://api.example.com/webhook/jkl012",
-    lastRecharge: "18/01/2024",
-    balance: 500.00,
-    messagesDay: 67,
-    messagesTotal: 2100,
-    contacts: 512,
-    status: "connected" as const,
-    userName: "Davidson"
-  },
-  {
-    phoneNumber: "+55 51 94321-0987",
-    webhook: "https://api.example.com/webhook/mno345",
-    lastRecharge: "12/01/2024",
-    balance: 320.75,
-    messagesDay: 31,
-    messagesTotal: 1567,
-    contacts: 389,
-    status: "connected" as const,
-    userName: "Davidson"
-  }
-];
+import { usePhoneNumbers, useDeletePhoneNumber, PhoneNumber } from "@/hooks/useCelctrl";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "disconnected">("all");
+  const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  const { data: phones, isLoading, refetch } = usePhoneNumbers();
+  const deletePhone = useDeletePhoneNumber();
+
+  const filteredPhones = phones?.filter((phone) => {
+    const matchesSearch =
+      phone.numero.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      phone.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      phone.webhook.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "connected" && phone.status === "connected") ||
+      (statusFilter === "disconnected" && phone.status === "disconnected");
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleEdit = (phone: PhoneNumber) => {
+    setEditingPhone(phone);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    await deletePhone.mutateAsync(id);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,15 +59,12 @@ const Index = () => {
             
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">{mockPhones.length} / 10</span>
+                <span className="text-muted-foreground">{phones?.length || 0} / 10</span>
               </div>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Número
-              </Button>
+              <AddPhoneDialog />
             </div>
           </div>
         </div>
@@ -116,24 +88,56 @@ const Index = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-border">
-                  Status
+                  {statusFilter === "all" ? "Status" : statusFilter === "connected" ? "Conectados" : "Desconectados"}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>Todos</DropdownMenuItem>
-                <DropdownMenuItem>Conectados</DropdownMenuItem>
-                <DropdownMenuItem>Desconectados</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("all")}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("connected")}>Conectados</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter("disconnected")}>Desconectados</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockPhones.map((phone, index) => (
-            <PhoneCard key={index} {...phone} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[400px] rounded-xl" />
+            ))}
+          </div>
+        ) : filteredPhones && filteredPhones.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPhones.map((phone) => (
+              <PhoneCard
+                key={phone.id}
+                id={phone.id}
+                phoneNumber={phone.numero}
+                webhook={phone.webhook}
+                lastRecharge={phone.ultimarecarga}
+                balance={parseFloat(phone.saldo) || 0}
+                messagesDay={phone.msgdia || 0}
+                messagesTotal={phone.totalmsg || 0}
+                contacts={phone.contatos || 0}
+                status={phone.status as "connected" | "disconnected"}
+                userName={phone.nome}
+                onEdit={() => handleEdit(phone)}
+                onDelete={() => handleDelete(phone.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Nenhum número encontrado</p>
+          </div>
+        )}
+
+        <EditPhoneDialog
+          phone={editingPhone}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
       </div>
     </div>
   );

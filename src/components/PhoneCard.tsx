@@ -2,8 +2,20 @@ import { Settings, Trash2, Users, MessageSquare, Wallet, Calendar } from "lucide
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PhoneCardProps {
+  id: number;
   phoneNumber: string;
   webhook: string;
   lastRecharge: string;
@@ -13,9 +25,12 @@ interface PhoneCardProps {
   contacts: number;
   status: "connected" | "disconnected";
   userName?: string;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 export function PhoneCard({
+  id,
   phoneNumber,
   webhook,
   lastRecharge,
@@ -25,6 +40,8 @@ export function PhoneCard({
   contacts,
   status,
   userName = "Davidson",
+  onEdit,
+  onDelete,
 }: PhoneCardProps) {
   return (
     <Card className="group hover:border-primary/50 transition-all duration-300">
@@ -40,7 +57,12 @@ export function PhoneCard({
             <p className="text-xs text-muted-foreground">WhatsApp Cloud API</p>
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onEdit}
+        >
           <Settings className="h-4 w-4" />
         </Button>
       </CardHeader>
@@ -92,10 +114,28 @@ export function PhoneCard({
               Desconectado
             </Badge>
           )}
-          <Button variant="destructive" size="sm">
-            <Trash2 className="h-4 w-4 mr-1" />
-            Excluir
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-1" />
+                Excluir
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir o número {phoneNumber}? Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardContent>
     </Card>
