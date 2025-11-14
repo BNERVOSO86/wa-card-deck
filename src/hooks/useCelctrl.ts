@@ -10,6 +10,7 @@ export interface PhoneNumber {
   webhook: string;
   saldo: string;
   ultimarecarga: string;
+  historicorecarga: string;
   totalmsg: number;
   msgdia: number;
   contatos: number;
@@ -25,6 +26,7 @@ export interface PhoneNumberInsert {
   webhook: string;
   saldo?: string;
   ultimarecarga?: string;
+  historicorecarga?: string;
   totalmsg?: number;
   msgdia?: number;
   contatos?: number;
