@@ -21,6 +21,7 @@ export type Database = {
           contatos: number | null
           created_at: string
           criadoem: string | null
+          historicorecarga: string | null
           id: number
           msgdia: number | null
           nome: string | null
@@ -37,6 +38,7 @@ export type Database = {
           contatos?: number | null
           created_at?: string
           criadoem?: string | null
+          historicorecarga?: string | null
           id?: number
           msgdia?: number | null
           nome?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           contatos?: number | null
           created_at?: string
           criadoem?: string | null
+          historicorecarga?: string | null
           id?: number
           msgdia?: number | null
           nome?: string | null

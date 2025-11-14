@@ -29,6 +29,7 @@ const phoneSchema = z.object({
   ultimarecarga: z.string().optional(),
   contatos: z.string().optional(),
   status: z.enum(["connected", "disconnected"]),
+  historicorecarga: z.string().optional(),
 });
 
 type PhoneFormData = z.infer<typeof phoneSchema>;
@@ -41,6 +42,7 @@ interface EditPhoneDialogProps {
 
 export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogProps) => {
   const updatePhone = useUpdatePhoneNumber();
+  const [rechargeHistory, setRechargeHistory] = useState<string[]>([]);
 
   const {
     register,
@@ -55,6 +57,9 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
 
   useEffect(() => {
     if (phone) {
+      const history = phone.historicorecarga ? JSON.parse(phone.historicorecarga) : [];
+      setRechargeHistory(Array.isArray(history) ? history : []);
+      
       reset({
         nome: phone.nome,
         numero: phone.numero,
@@ -63,9 +68,27 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         ultimarecarga: phone.ultimarecarga,
         contatos: phone.contatos?.toString() || "0",
         status: phone.status as "connected" | "disconnected",
+        historicorecarga: phone.historicorecarga,
       });
     }
   }, [phone, reset]);
+
+  const addRechargeDate = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const updatedHistory = [...rechargeHistory, today].sort((a, b) => 
+      new Date(b).getTime() - new Date(a).getTime()
+    );
+    setRechargeHistory(updatedHistory);
+    setValue("historicorecarga", JSON.stringify(updatedHistory));
+    setValue("ultimarecarga", updatedHistory[0]);
+  };
+
+  const removeRechargeDate = (index: number) => {
+    const updatedHistory = rechargeHistory.filter((_, i) => i !== index);
+    setRechargeHistory(updatedHistory);
+    setValue("historicorecarga", JSON.stringify(updatedHistory));
+    setValue("ultimarecarga", updatedHistory[0] || "");
+  };
 
   const onSubmit = async (data: PhoneFormData) => {
     if (!phone) return;
@@ -78,6 +101,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         webhook: data.webhook,
         saldo: data.saldo,
         ultimarecarga: data.ultimarecarga,
+        historicorecarga: data.historicorecarga,
         contatos: data.contatos ? parseInt(data.contatos) : 0,
         status: data.status,
         ativo: data.status === "connected",
@@ -146,7 +170,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="ultimarecarga">Última Recarga</Label>
-              <Input id="ultimarecarga" {...register("ultimarecarga")} />
+              <Input id="ultimarecarga" {...register("ultimarecarga")} disabled />
             </div>
 
             <div className="space-y-2">
@@ -166,6 +190,34 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Histórico de Recargas</Label>
+              <Button type="button" size="sm" onClick={addRechargeDate}>
+                + Adicionar Recarga
+              </Button>
+            </div>
+            {rechargeHistory.length > 0 ? (
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
+                {rechargeHistory.map((date, index) => (
+                  <div key={index} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
+                    <span>{new Date(date).toLocaleDateString('pt-BR')}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeRechargeDate(index)}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma recarga registrada</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
