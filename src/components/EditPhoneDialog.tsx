@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUpdatePhoneNumber, PhoneNumber } from "@/hooks/useCelctrl";
+import { toast } from "@/hooks/use-toast";
 
 const phoneSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
@@ -43,6 +44,8 @@ interface EditPhoneDialogProps {
 export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogProps) => {
   const updatePhone = useUpdatePhoneNumber();
   const [rechargeHistory, setRechargeHistory] = useState<string[]>([]);
+  const [newRechargeDate, setNewRechargeDate] = useState<string>("");
+  const [newRechargeValue, setNewRechargeValue] = useState<string>("");
 
   const {
     register,
@@ -74,13 +77,39 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
   }, [phone, reset]);
 
   const addRechargeDate = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const updatedHistory = [...rechargeHistory, today].sort((a, b) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    );
+    if (!newRechargeDate) {
+      toast({
+        title: "Erro",
+        description: "Selecione uma data para a recarga",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const rechargeEntry = {
+      date: newRechargeDate,
+      value: newRechargeValue || "0"
+    };
+    
+    const updatedHistory = [...rechargeHistory, JSON.stringify(rechargeEntry)].sort((a, b) => {
+      const dateA = JSON.parse(a).date;
+      const dateB = JSON.parse(b).date;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+    
     setRechargeHistory(updatedHistory);
     setValue("historicorecarga", JSON.stringify(updatedHistory));
-    setValue("ultimarecarga", updatedHistory[0]);
+    setValue("ultimarecarga", newRechargeDate);
+    
+    // Update saldo if value was provided
+    if (newRechargeValue) {
+      const currentSaldo = parseFloat(watch("saldo") || "0");
+      const rechargeValue = parseFloat(newRechargeValue);
+      setValue("saldo", (currentSaldo + rechargeValue).toFixed(2));
+    }
+    
+    setNewRechargeDate("");
+    setNewRechargeValue("");
   };
 
   const removeRechargeDate = (index: number) => {
@@ -193,27 +222,78 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Histórico de Recargas</Label>
-              <Button type="button" size="sm" onClick={addRechargeDate}>
-                + Adicionar Recarga
-              </Button>
+            <Label>Histórico de Recargas</Label>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="newRechargeDate">Data da Recarga</Label>
+                <Input
+                  id="newRechargeDate"
+                  type="date"
+                  value={newRechargeDate}
+                  onChange={(e) => setNewRechargeDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newRechargeValue">Valor (opcional)</Label>
+                <Input
+                  id="newRechargeValue"
+                  type="number"
+                  step="0.01"
+                  placeholder="R$ 0.00"
+                  value={newRechargeValue}
+                  onChange={(e) => setNewRechargeValue(e.target.value)}
+                />
+              </div>
             </div>
+            
+            <Button type="button" size="sm" onClick={addRechargeDate} className="w-full">
+              + Adicionar Recarga
+            </Button>
+            
             {rechargeHistory.length > 0 ? (
               <div className="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                {rechargeHistory.map((date, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
-                    <span>{new Date(date).toLocaleDateString('pt-BR')}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeRechargeDate(index)}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                ))}
+                {rechargeHistory.map((entry, index) => {
+                  try {
+                    const parsed = JSON.parse(entry);
+                    const date = new Date(parsed.date);
+                    const formattedDate = date.toLocaleDateString('pt-BR');
+                    const value = parsed.value ? `R$ ${parseFloat(parsed.value).toFixed(2)}` : '';
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
+                        <div className="flex gap-2">
+                          <span className="font-medium">{formattedDate}</span>
+                          {value && <span className="text-muted-foreground">{value}</span>}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeRechargeDate(index)}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    );
+                  } catch {
+                    // Handle old format (just date string)
+                    const date = new Date(entry);
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
+                        <span>{date.toLocaleDateString('pt-BR')}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeRechargeDate(index)}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    );
+                  }
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma recarga registrada</p>
