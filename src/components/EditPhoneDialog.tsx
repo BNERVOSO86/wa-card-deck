@@ -86,20 +86,31 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
       return;
     }
 
+    // Convert date from YYYY-MM-DD to dd/MM/yyyy
+    const [year, month, day] = newRechargeDate.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+
     const rechargeEntry = {
-      date: newRechargeDate,
+      date: formattedDate,
       value: newRechargeValue || "0"
     };
     
     const updatedHistory = [...rechargeHistory, JSON.stringify(rechargeEntry)].sort((a, b) => {
-      const dateA = JSON.parse(a).date;
-      const dateB = JSON.parse(b).date;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
+      const parseDate = (dateStr: string) => {
+        const [d, m, y] = dateStr.split('/');
+        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+      };
+      const dateA = parseDate(JSON.parse(a).date);
+      const dateB = parseDate(JSON.parse(b).date);
+      return dateB.getTime() - dateA.getTime();
     });
     
     setRechargeHistory(updatedHistory);
     setValue("historicorecarga", JSON.stringify(updatedHistory));
-    setValue("ultimarecarga", newRechargeDate);
+    
+    // Get the most recent date from history
+    const mostRecentEntry = JSON.parse(updatedHistory[0]);
+    setValue("ultimarecarga", mostRecentEntry.date);
     
     // Update saldo if value was provided
     if (newRechargeValue) {
@@ -116,7 +127,14 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
     const updatedHistory = rechargeHistory.filter((_, i) => i !== index);
     setRechargeHistory(updatedHistory);
     setValue("historicorecarga", JSON.stringify(updatedHistory));
-    setValue("ultimarecarga", updatedHistory[0] || "");
+    
+    // Update ultimarecarga with the most recent date or empty string
+    if (updatedHistory.length > 0) {
+      const mostRecentEntry = JSON.parse(updatedHistory[0]);
+      setValue("ultimarecarga", mostRecentEntry.date);
+    } else {
+      setValue("ultimarecarga", "");
+    }
   };
 
   const onSubmit = async (data: PhoneFormData) => {
@@ -143,14 +161,15 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Editar Número</DialogTitle>
           <DialogDescription>
             Atualize os dados do número WhatsApp
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="space-y-4 overflow-y-auto pr-2 flex-1">
           <div className="space-y-2">
             <Label htmlFor="nome">Nome *</Label>
             <Input id="nome" {...register("nome")} />
@@ -299,8 +318,9 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
               <p className="text-sm text-muted-foreground">Nenhuma recarga registrada</p>
             )}
           </div>
+          </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t mt-4 bg-background">
             <Button
               type="button"
               variant="outline"
@@ -309,7 +329,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
               Cancelar
             </Button>
             <Button type="submit" disabled={updatePhone.isPending}>
-              {updatePhone.isPending ? "Salvando..." : "Salvar"}
+              {updatePhone.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </form>
