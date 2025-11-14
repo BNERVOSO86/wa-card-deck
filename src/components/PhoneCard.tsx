@@ -75,10 +75,32 @@ export function PhoneCard({
             <span className="font-medium text-foreground">R$ {balance.toFixed(2)}</span>
           </div>
           
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Última Recarga:</span>
-            <span className="font-medium text-foreground">{lastRecharge}</span>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Última Recarga:</span>
+              <span className="font-medium text-foreground">{lastRecharge}</span>
+            </div>
+            {lastRecharge !== "Sem recarga" && (
+              <div className="flex items-center gap-2 text-xs pl-6">
+                <span className="text-muted-foreground">
+                  {(() => {
+                    try {
+                      const [day, month, year] = lastRecharge.split('/');
+                      const lastRechargeDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      lastRechargeDate.setHours(0, 0, 0, 0);
+                      const diffTime = today.getTime() - lastRechargeDate.getTime();
+                      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                      return `(${diffDays} ${diffDays === 1 ? 'dia' : 'dias'} atrás)`;
+                    } catch {
+                      return '';
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 text-sm">
