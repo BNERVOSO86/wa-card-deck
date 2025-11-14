@@ -1,4 +1,4 @@
-import { Settings, Trash2, Users, MessageSquare, Wallet, Calendar } from "lucide-react";
+import { Settings, Trash2, Users, MessageSquare, Wallet, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -43,8 +43,36 @@ export function PhoneCard({
   onEdit,
   onDelete,
 }: PhoneCardProps) {
+  // Calculate days since last recharge for border color
+  const getDaysSinceRecharge = () => {
+    if (lastRecharge === "Sem recarga") return null;
+    try {
+      const [day, month, year] = lastRecharge.split('/');
+      const lastRechargeDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      lastRechargeDate.setHours(0, 0, 0, 0);
+      const diffTime = today.getTime() - lastRechargeDate.getTime();
+      return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    } catch {
+      return null;
+    }
+  };
+
+  const daysSinceRecharge = getDaysSinceRecharge();
+
+  // Determine border color based on status and days
+  const getBorderClass = () => {
+    if (status === "disconnected") return "border-destructive border-2";
+    if (daysSinceRecharge !== null) {
+      if (daysSinceRecharge <= 1) return "border-warning border-2"; // Golden for today/yesterday
+      if (daysSinceRecharge > 60) return "border-alert border-2"; // Yellow for >60 days
+    }
+    return "";
+  };
+
   return (
-    <Card className="group hover:border-primary/50 transition-all duration-300">
+    <Card className={`group hover:border-primary/50 transition-all duration-300 ${getBorderClass()}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center">
@@ -132,9 +160,9 @@ export function PhoneCard({
             {userName}
           </Badge>
           {status === "disconnected" && (
-            <Badge variant="destructive" className="bg-destructive/20 text-destructive border-destructive">
-              Desconectado
-            </Badge>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-destructive/10">
+              <X className="h-5 w-5 text-destructive" />
+            </div>
           )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
