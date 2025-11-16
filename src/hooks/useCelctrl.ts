@@ -34,6 +34,8 @@ export interface PhoneNumberInsert {
   contatos?: number;
   status?: string;
   ativo?: boolean;
+  tipo?: number;
+  vencimento?: number;
 }
 
 export const usePhoneNumbers = () => {

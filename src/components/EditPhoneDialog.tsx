@@ -31,6 +31,8 @@ const phoneSchema = z.object({
   contatos: z.string().optional(),
   status: z.enum(["connected", "disconnected"]),
   historicorecarga: z.string().optional(),
+  tipo: z.string().optional(),
+  vencimento: z.string().optional(),
 });
 
 type PhoneFormData = z.infer<typeof phoneSchema>;
@@ -72,6 +74,8 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         contatos: phone.contatos?.toString() || "0",
         status: phone.status as "connected" | "disconnected",
         historicorecarga: phone.historicorecarga,
+        tipo: phone.tipo?.toString() || "1",
+        vencimento: phone.vencimento?.toString() || "",
       });
     }
   }, [phone, reset]);
@@ -152,6 +156,8 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         contatos: data.contatos ? parseInt(data.contatos) : 0,
         status: data.status,
         ativo: data.status === "connected",
+        tipo: data.tipo ? parseInt(data.tipo) : 1,
+        vencimento: data.vencimento ? parseInt(data.vencimento) : 0,
       },
     });
     onOpenChange(false);
@@ -238,6 +244,38 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo de Plano</Label>
+              <Select
+                value={watch("tipo") || "1"}
+                onValueChange={(value) => setValue("tipo", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">PRÉ PAGO</SelectItem>
+                  <SelectItem value="2">PÓS PAGO</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {watch("tipo") === "2" && (
+              <div className="space-y-2">
+                <Label htmlFor="vencimento">Dia do Vencimento</Label>
+                <Input
+                  id="vencimento"
+                  {...register("vencimento")}
+                  type="number"
+                  min="1"
+                  max="31"
+                  placeholder="Ex: 15"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
