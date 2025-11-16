@@ -115,13 +115,14 @@ const Index = () => {
                 id={phone.id}
                 phoneNumber={phone.numero}
                 webhook={phone.webhook}
-                lastRecharge={phone.ultimarecarga}
+                lastRecharge={phone.ultimarecarga || "Sem recarga"}
                 balance={parseFloat(phone.saldo) || 0}
-                messagesDay={phone.msgdia || 0}
                 messagesTotal={phone.totalmsg || 0}
                 contacts={phone.contatos || 0}
                 status={phone.status as "connected" | "disconnected"}
                 userName={phone.nome}
+                tipo={phone.tipo || 1}
+                vencimento={phone.vencimento || 0}
                 onEdit={() => handleEdit(phone)}
                 onDelete={() => handleDelete(phone.id)}
               />

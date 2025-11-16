@@ -26,10 +26,13 @@ export type Database = {
           msgdia: number | null
           nome: string | null
           numero: string | null
+          quepasakey: string | null
           saldo: string | null
           status: string | null
+          tipo: number | null
           totalmsg: number | null
           ultimarecarga: string | null
+          vencimento: number | null
           webhook: string | null
         }
         Insert: {
@@ -43,10 +46,13 @@ export type Database = {
           msgdia?: number | null
           nome?: string | null
           numero?: string | null
+          quepasakey?: string | null
           saldo?: string | null
           status?: string | null
+          tipo?: number | null
           totalmsg?: number | null
           ultimarecarga?: string | null
+          vencimento?: number | null
           webhook?: string | null
         }
         Update: {
@@ -60,10 +66,13 @@ export type Database = {
           msgdia?: number | null
           nome?: string | null
           numero?: string | null
+          quepasakey?: string | null
           saldo?: string | null
           status?: string | null
+          tipo?: number | null
           totalmsg?: number | null
           ultimarecarga?: string | null
+          vencimento?: number | null
           webhook?: string | null
         }
         Relationships: []
