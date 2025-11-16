@@ -18,7 +18,7 @@ export interface PhoneNumber {
   ativo: boolean;
   criadoem: string;
   alteradoem: string;
-  tipo: number;
+  tipo: string;
   vencimento: number;
 }
 
@@ -34,7 +34,7 @@ export interface PhoneNumberInsert {
   contatos?: number;
   status?: string;
   ativo?: boolean;
-  tipo?: number;
+  tipo?: string;
   vencimento?: number;
 }
 

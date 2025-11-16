@@ -29,7 +29,7 @@ export type Database = {
           quepasakey: string | null
           saldo: string | null
           status: string | null
-          tipo: number | null
+          tipo: string | null
           totalmsg: number | null
           ultimarecarga: string | null
           vencimento: number | null
@@ -49,7 +49,7 @@ export type Database = {
           quepasakey?: string | null
           saldo?: string | null
           status?: string | null
-          tipo?: number | null
+          tipo?: string | null
           totalmsg?: number | null
           ultimarecarga?: string | null
           vencimento?: number | null
@@ -69,7 +69,7 @@ export type Database = {
           quepasakey?: string | null
           saldo?: string | null
           status?: string | null
-          tipo?: number | null
+          tipo?: string | null
           totalmsg?: number | null
           ultimarecarga?: string | null
           vencimento?: number | null
