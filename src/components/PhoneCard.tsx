@@ -73,11 +73,11 @@ export function PhoneCard({
     return "";
   };
 
-  // Determine card background based on tipo
+  // Determine card background and text color based on tipo
   const getCardBgClass = () => {
-    if (tipo === 1) return "bg-prepaid"; // PRÉ PAGO - verde claro
-    if (tipo === 2) return "bg-postpaid"; // PÓS PAGO - azul bebe claro
-    return "bg-card";
+    if (tipo === 1) return "bg-prepaid text-prepaid-foreground"; // PRÉ PAGO - verde claro
+    if (tipo === 2) return "bg-postpaid text-postpaid-foreground"; // PÓS PAGO - azul bebe claro
+    return "bg-card text-card-foreground";
   };
 
   const getTipoLabel = () => {

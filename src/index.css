@@ -38,8 +38,10 @@ All colors MUST be HSL.
     --alert: 45 93% 47%;
     --alert-foreground: 0 0% 100%;
     
-    --prepaid: 142 76% 90%;
-    --postpaid: 199 89% 90%;
+    --prepaid: 142 76% 96%;
+    --prepaid-foreground: 142 76% 25%;
+    --postpaid: 199 89% 96%;
+    --postpaid-foreground: 199 89% 25%;
 
     --border: 220 13% 20%;
     --input: 220 13% 20%;
