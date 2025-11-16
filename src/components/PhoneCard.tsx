@@ -24,7 +24,7 @@ interface PhoneCardProps {
   contacts: number;
   status: "connected" | "disconnected";
   userName?: string;
-  tipo: number;
+  tipo: string;
   vencimento: number;
   onEdit: () => void;
   onDelete: () => void;
@@ -75,14 +75,14 @@ export function PhoneCard({
 
   // Determine card background and text color based on tipo
   const getCardBgClass = () => {
-    if (tipo === 1) return "bg-prepaid text-prepaid-foreground"; // PRÉ PAGO - verde claro
-    if (tipo === 2) return "bg-postpaid text-postpaid-foreground"; // PÓS PAGO - azul bebe claro
+    if (tipo === "PRE") return "bg-prepaid text-prepaid-foreground"; // PRÉ PAGO - verde claro
+    if (tipo === "POS") return "bg-postpaid text-postpaid-foreground"; // PÓS PAGO - azul bebe claro
     return "bg-card text-card-foreground";
   };
 
   const getTipoLabel = () => {
-    if (tipo === 1) return "PRÉ PAGO";
-    if (tipo === 2) return "PÓS PAGO";
+    if (tipo === "PRE") return "PRÉ PAGO";
+    if (tipo === "POS") return "PÓS PAGO";
     return "";
   };
 
@@ -152,7 +152,7 @@ export function PhoneCard({
             <span className="font-medium text-foreground">{messagesTotal}</span>
           </div>
 
-          {tipo === 2 && vencimento && (
+          {tipo === "POS" && vencimento && (
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Vencimento:</span>

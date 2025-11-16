@@ -74,7 +74,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         contatos: phone.contatos?.toString() || "0",
         status: phone.status as "connected" | "disconnected",
         historicorecarga: phone.historicorecarga,
-        tipo: phone.tipo?.toString() || "1",
+        tipo: phone.tipo || "PRE",
         vencimento: phone.vencimento?.toString() || "",
       });
     }
@@ -156,7 +156,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
         contatos: data.contatos ? parseInt(data.contatos) : 0,
         status: data.status,
         ativo: data.status === "connected",
-        tipo: data.tipo ? parseInt(data.tipo) : 1,
+        tipo: data.tipo || "PRE",
         vencimento: data.vencimento ? parseInt(data.vencimento) : 0,
       },
     });
@@ -250,20 +250,20 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
             <div className="space-y-2">
               <Label htmlFor="tipo">Tipo de Plano</Label>
               <Select
-                value={watch("tipo") || "1"}
+                value={watch("tipo") || "PRE"}
                 onValueChange={(value) => setValue("tipo", value)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">PRÉ PAGO</SelectItem>
-                  <SelectItem value="2">PÓS PAGO</SelectItem>
+                  <SelectItem value="PRE">PRÉ PAGO</SelectItem>
+                  <SelectItem value="POS">PÓS PAGO</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {watch("tipo") === "2" && (
+            {watch("tipo") === "POS" && (
               <div className="space-y-2">
                 <Label htmlFor="vencimento">Dia do Vencimento</Label>
                 <Input

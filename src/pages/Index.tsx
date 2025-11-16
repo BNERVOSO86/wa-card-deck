@@ -117,13 +117,13 @@ const Index = () => {
                 webhook={phone.webhook}
                 lastRecharge={phone.ultimarecarga || "Sem recarga"}
                 balance={parseFloat(phone.saldo) || 0}
-                messagesTotal={phone.totalmsg || 0}
-                contacts={phone.contatos || 0}
-                status={phone.status as "connected" | "disconnected"}
-                userName={phone.nome}
-                tipo={phone.tipo || 1}
-                vencimento={phone.vencimento || 0}
-                onEdit={() => handleEdit(phone)}
+                  messagesTotal={phone.totalmsg || 0}
+                  contacts={phone.contatos || 0}
+                  status={phone.status as "connected" | "disconnected"}
+                  userName={phone.nome}
+                  tipo={phone.tipo || "PRE"}
+                  vencimento={phone.vencimento || 0}
+                  onEdit={() => handleEdit(phone)}
                 onDelete={() => handleDelete(phone.id)}
               />
             ))}
