@@ -39,6 +39,8 @@ export default {
           DEFAULT: "hsl(var(--alert))",
           foreground: "hsl(var(--alert-foreground))",
         },
+        prepaid: "hsl(var(--prepaid))",
+        postpaid: "hsl(var(--postpaid))",
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",

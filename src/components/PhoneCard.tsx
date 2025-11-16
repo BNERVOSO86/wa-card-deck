@@ -20,11 +20,12 @@ interface PhoneCardProps {
   webhook: string;
   lastRecharge: string;
   balance: number;
-  messagesDay: number;
   messagesTotal: number;
   contacts: number;
   status: "connected" | "disconnected";
   userName?: string;
+  tipo: number;
+  vencimento: number;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -35,11 +36,12 @@ export function PhoneCard({
   webhook,
   lastRecharge,
   balance,
-  messagesDay,
   messagesTotal,
   contacts,
   status,
   userName = "Davidson",
+  tipo,
+  vencimento,
   onEdit,
   onDelete,
 }: PhoneCardProps) {
@@ -71,8 +73,21 @@ export function PhoneCard({
     return "";
   };
 
+  // Determine card background based on tipo
+  const getCardBgClass = () => {
+    if (tipo === 1) return "bg-prepaid"; // PRÉ PAGO - verde claro
+    if (tipo === 2) return "bg-postpaid"; // PÓS PAGO - azul bebe claro
+    return "bg-card";
+  };
+
+  const getTipoLabel = () => {
+    if (tipo === 1) return "PRÉ PAGO";
+    if (tipo === 2) return "PÓS PAGO";
+    return "";
+  };
+
   return (
-    <Card className={`group hover:border-primary/50 transition-all duration-300 ${getBorderClass()}`}>
+    <Card className={`group hover:border-primary/50 transition-all duration-300 ${getBorderClass()} ${getCardBgClass()}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center">
@@ -133,15 +148,17 @@ export function PhoneCard({
 
           <div className="flex items-center gap-2 text-sm">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Mensagens Hoje:</span>
-            <span className="font-medium text-foreground">{messagesDay}</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Total Mensagens:</span>
             <span className="font-medium text-foreground">{messagesTotal}</span>
           </div>
+
+          {tipo === 2 && vencimento && (
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Vencimento:</span>
+              <span className="font-medium text-foreground">Dia {vencimento}</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 text-sm">
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -156,9 +173,16 @@ export function PhoneCard({
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <Badge variant={status === "connected" ? "default" : "secondary"} className={status === "connected" ? "bg-warning text-warning-foreground" : ""}>
-            {userName}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={status === "connected" ? "default" : "secondary"} className={status === "connected" ? "bg-warning text-warning-foreground" : ""}>
+              {userName}
+            </Badge>
+            {getTipoLabel() && (
+              <Badge variant="outline" className="text-xs">
+                {getTipoLabel()}
+              </Badge>
+            )}
+          </div>
           {status === "disconnected" && (
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-destructive/10">
               <X className="h-5 w-5 text-destructive" />

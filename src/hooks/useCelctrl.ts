@@ -18,6 +18,8 @@ export interface PhoneNumber {
   ativo: boolean;
   criadoem: string;
   alteradoem: string;
+  tipo: number;
+  vencimento: number;
 }
 
 export interface PhoneNumberInsert {
