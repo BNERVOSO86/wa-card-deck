@@ -621,6 +621,44 @@ export type Database = {
         }
         Relationships: []
       }
+      vencimento_logs: {
+        Row: {
+          acao: string
+          created_at: string
+          data_execucao: string
+          detalhes: Json | null
+          id: number
+          numero_id: number | null
+          status: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          data_execucao?: string
+          detalhes?: Json | null
+          id?: number
+          numero_id?: number | null
+          status: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          data_execucao?: string
+          detalhes?: Json | null
+          id?: number
+          numero_id?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vencimento_logs_numero_id_fkey"
+            columns: ["numero_id"]
+            isOneToOne: false
+            referencedRelation: "celctrl"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
