@@ -44,10 +44,21 @@ const HistoricoRecargas = () => {
       if (!phone.historicorecarga) return;
 
       try {
-        const history = JSON.parse(phone.historicorecarga);
-        const items = Array.isArray(history) ? history : [history];
+        let items: { date?: string; value?: string }[] = [];
+        const raw = phone.historicorecarga as unknown;
 
-        items.forEach((item: { date?: string; value?: string }) => {
+        if (Array.isArray(raw)) {
+          items = raw.map((item: string) => {
+            try { return JSON.parse(item); } catch { return null; }
+          }).filter(Boolean);
+        } else if (typeof raw === 'string') {
+          try {
+            const parsed = JSON.parse(raw);
+            items = Array.isArray(parsed) ? parsed : [parsed];
+          } catch { /* skip */ }
+        }
+
+        items.forEach((item) => {
           if (!item.date) return;
           try {
             const parsedDate = parse(item.date, "dd/MM/yyyy", new Date());
@@ -58,13 +69,9 @@ const HistoricoRecargas = () => {
               value: item.value || "0",
               parsedDate,
             });
-          } catch {
-            // skip invalid dates
-          }
+          } catch { /* skip */ }
         });
-      } catch {
-        // skip invalid JSON
-      }
+      } catch { /* skip */ }
     });
 
     return entries.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
