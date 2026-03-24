@@ -47,16 +47,24 @@ const HistoricoRecargas = () => {
         let items: { date?: string; value?: string }[] = [];
         const raw = phone.historicorecarga as unknown;
 
+        // Parse raw data - could be string, array of strings, or array of objects
+        let rawItems: unknown[] = [];
         if (Array.isArray(raw)) {
-          items = raw.map((item: string) => {
-            try { return JSON.parse(item); } catch { return null; }
-          }).filter(Boolean);
+          rawItems = raw;
         } else if (typeof raw === 'string') {
           try {
             const parsed = JSON.parse(raw);
-            items = Array.isArray(parsed) ? parsed : [parsed];
+            rawItems = Array.isArray(parsed) ? parsed : [parsed];
           } catch { /* skip */ }
         }
+
+        // Each rawItem could be a JSON string or already an object
+        items = rawItems.map((ri) => {
+          if (typeof ri === 'string') {
+            try { return JSON.parse(ri); } catch { return null; }
+          }
+          return ri as { date?: string; value?: string };
+        }).filter(Boolean) as { date?: string; value?: string }[];
 
         items.forEach((item) => {
           if (!item.date) return;

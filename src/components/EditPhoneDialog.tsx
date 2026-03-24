@@ -64,11 +64,22 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
     if (phone) {
       let history: string[] = [];
       const raw = phone.historicorecarga as unknown;
+      
+      let rawItems: unknown[] = [];
       if (Array.isArray(raw)) {
-        history = raw as string[];
+        rawItems = raw;
       } else if (typeof raw === 'string' && raw) {
-        try { const parsed = JSON.parse(raw); history = Array.isArray(parsed) ? parsed : []; } catch { history = []; }
+        try { const parsed = JSON.parse(raw); rawItems = Array.isArray(parsed) ? parsed : []; } catch { rawItems = []; }
       }
+      
+      // Ensure each item is a JSON string
+      history = rawItems.map((ri) => {
+        if (typeof ri === 'string') {
+          try { JSON.parse(ri); return ri; } catch { return null; }
+        }
+        return JSON.stringify(ri);
+      }).filter(Boolean) as string[];
+      
       setRechargeHistory(history);
       
       reset({
