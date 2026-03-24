@@ -1,13 +1,8 @@
-import { useState, useMemo } from "react";
-import { Search, Filter } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, X, CalendarIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -18,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePhoneNumbers } from "@/hooks/useCelctrl";
-import { parse, isAfter, isBefore, isEqual, format } from "date-fns";
+import { parse, isAfter, isBefore, isEqual } from "date-fns";
 
 interface RechargeEntry {
   numero: string;
@@ -28,42 +23,52 @@ interface RechargeEntry {
   parsedDate: Date;
 }
 
+type SortField = "numero" | "nome" | "date" | "value";
+type SortDir = "asc" | "desc";
+
+const NAME_COLORS = [
+  "hsl(142, 70%, 65%)",  // green
+  "hsl(199, 89%, 65%)",  // blue
+  "hsl(280, 70%, 70%)",  // purple
+  "hsl(35, 90%, 65%)",   // orange
+  "hsl(340, 75%, 65%)",  // pink
+  "hsl(60, 80%, 60%)",   // yellow
+  "hsl(180, 60%, 55%)",  // teal
+  "hsl(15, 85%, 65%)",   // coral
+];
+
 const HistoricoRecargas = () => {
   const { data: phones, isLoading } = usePhoneNumbers();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNumber, setSelectedNumber] = useState<string>("all");
+  const [selectedName, setSelectedName] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const allEntries = useMemo(() => {
     if (!phones) return [];
-
     const entries: RechargeEntry[] = [];
 
     phones.forEach((phone) => {
       if (!phone.historicorecarga) return;
-
       try {
-        let items: { date?: string; value?: string }[] = [];
         const raw = phone.historicorecarga as unknown;
-
-        // Parse raw data - could be string, array of strings, or array of objects
         let rawItems: unknown[] = [];
         if (Array.isArray(raw)) {
           rawItems = raw;
-        } else if (typeof raw === 'string') {
+        } else if (typeof raw === "string") {
           try {
             const parsed = JSON.parse(raw);
             rawItems = Array.isArray(parsed) ? parsed : [parsed];
           } catch { /* skip */ }
         }
-
-        // Each rawItem could be a JSON string or already an object
-        items = rawItems.map((ri) => {
-          if (typeof ri === 'string') {
+        const items = rawItems.map((ri) => {
+          if (typeof ri === "string") {
             try { return JSON.parse(ri); } catch { return null; }
           }
-          return ri as { date?: string; value?: string };
+          return ri;
         }).filter(Boolean) as { date?: string; value?: string }[];
 
         items.forEach((item) => {
@@ -82,12 +87,22 @@ const HistoricoRecargas = () => {
       } catch { /* skip */ }
     });
 
-    return entries.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+    return entries;
   }, [phones]);
 
+  const nameColorMap = useMemo(() => {
+    const names = [...new Set(allEntries.map((e) => e.nome))];
+    const map: Record<string, string> = {};
+    names.forEach((name, i) => {
+      map[name] = NAME_COLORS[i % NAME_COLORS.length];
+    });
+    return map;
+  }, [allEntries]);
+
   const filteredEntries = useMemo(() => {
-    return allEntries.filter((entry) => {
+    const filtered = allEntries.filter((entry) => {
       if (selectedNumber !== "all" && entry.numero !== selectedNumber) return false;
+      if (selectedName !== "all" && entry.nome !== selectedName) return false;
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -115,14 +130,38 @@ const HistoricoRecargas = () => {
 
       return true;
     });
-  }, [allEntries, selectedNumber, searchQuery, dateFrom, dateTo]);
+
+    // Sort
+    filtered.sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "numero":
+          cmp = a.numero.localeCompare(b.numero);
+          break;
+        case "nome":
+          cmp = a.nome.localeCompare(b.nome);
+          break;
+        case "date":
+          cmp = a.parsedDate.getTime() - b.parsedDate.getTime();
+          break;
+        case "value":
+          cmp = parseFloat(a.value.replace(",", ".")) - parseFloat(b.value.replace(",", "."));
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return filtered;
+  }, [allEntries, selectedNumber, selectedName, searchQuery, dateFrom, dateTo, sortField, sortDir]);
 
   const uniqueNumbers = useMemo(() => {
     if (!phones) return [];
-    return phones
-      .filter((p) => p.numero)
-      .map((p) => ({ numero: p.numero, nome: p.nome }));
+    return phones.filter((p) => p.numero).map((p) => ({ numero: p.numero, nome: p.nome }));
   }, [phones]);
+
+  const uniqueNames = useMemo(() => {
+    return [...new Set(allEntries.map((e) => e.nome))].filter(Boolean);
+  }, [allEntries]);
 
   const totalValue = useMemo(() => {
     return filteredEntries.reduce((sum, e) => {
@@ -131,8 +170,42 @@ const HistoricoRecargas = () => {
     }, 0);
   }, [filteredEntries]);
 
+  const handleSort = useCallback((field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir(field === "date" ? "desc" : "asc");
+    }
+  }, [sortField]);
+
+  const handleClickName = useCallback((name: string) => {
+    setSelectedName((prev) => (prev === name ? "all" : name));
+  }, []);
+
+  const handleClickNumero = useCallback((numero: string) => {
+    setSelectedNumber((prev) => (prev === numero ? "all" : numero));
+  }, []);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 ml-1 opacity-40" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 ml-1 text-primary" />
+      : <ArrowDown className="h-3.5 w-3.5 ml-1 text-primary" />;
+  };
+
+  const hasActiveFilters = selectedNumber !== "all" || selectedName !== "all" || searchQuery || dateFrom || dateTo;
+
+  const clearFilters = () => {
+    setSelectedNumber("all");
+    setSelectedName("all");
+    setSearchQuery("");
+    setDateFrom("");
+    setDateTo("");
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Histórico de Recargas</h1>
         <p className="text-muted-foreground text-sm mt-1">
@@ -141,47 +214,80 @@ const HistoricoRecargas = () => {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-card border-border"
-          />
+      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, número ou valor..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-background border-border"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="bg-background border-border w-[150px]"
+            />
+            <span className="text-muted-foreground text-sm">até</span>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="bg-background border-border w-[150px]"
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          )}
         </div>
 
-        <Select value={selectedNumber} onValueChange={setSelectedNumber}>
-          <SelectTrigger className="bg-card border-border">
-            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Todos os números" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os números</SelectItem>
-            {uniqueNumbers.map((n) => (
-              <SelectItem key={n.numero} value={n.numero}>
-                {n.nome || n.numero}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Active filter badges */}
+        {(selectedNumber !== "all" || selectedName !== "all") && (
+          <div className="flex gap-2 flex-wrap">
+            {selectedName !== "all" && (
+              <Badge
+                variant="secondary"
+                className="cursor-pointer gap-1"
+                style={{ backgroundColor: nameColorMap[selectedName] + "22", color: nameColorMap[selectedName], borderColor: nameColorMap[selectedName] + "44" }}
+                onClick={() => setSelectedName("all")}
+              >
+                {selectedName} <X className="h-3 w-3" />
+              </Badge>
+            )}
+            {selectedNumber !== "all" && (
+              <Badge variant="secondary" className="cursor-pointer gap-1 font-mono" onClick={() => setSelectedNumber("all")}>
+                {selectedNumber} <X className="h-3 w-3" />
+              </Badge>
+            )}
+          </div>
+        )}
 
-        <Input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="bg-card border-border"
-          placeholder="Data início"
-        />
-
-        <Input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="bg-card border-border"
-          placeholder="Data fim"
-        />
+        {/* Quick name filter chips */}
+        <div className="flex gap-2 flex-wrap">
+          {uniqueNames.map((name) => (
+            <button
+              key={name}
+              onClick={() => handleClickName(name)}
+              className="px-3 py-1 rounded-full text-xs font-medium transition-all border"
+              style={{
+                backgroundColor: selectedName === name ? nameColorMap[name] + "33" : "transparent",
+                color: nameColorMap[name],
+                borderColor: selectedName === name ? nameColorMap[name] : nameColorMap[name] + "44",
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Summary */}
@@ -214,20 +320,51 @@ const HistoricoRecargas = () => {
           <Table>
             <TableHeader>
               <TableRow className="bg-card/50">
-                <TableHead>Número</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("numero")} className="flex items-center hover:text-foreground transition-colors font-semibold">
+                    Número <SortIcon field="numero" />
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("nome")} className="flex items-center hover:text-foreground transition-colors font-semibold">
+                    Nome <SortIcon field="nome" />
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("date")} className="flex items-center hover:text-foreground transition-colors font-semibold">
+                    Data <SortIcon field="date" />
+                  </button>
+                </TableHead>
+                <TableHead className="text-right">
+                  <button onClick={() => handleSort("value")} className="flex items-center justify-end hover:text-foreground transition-colors font-semibold ml-auto">
+                    Valor <SortIcon field="value" />
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredEntries.map((entry, idx) => (
-                <TableRow key={`${entry.numero}-${entry.date}-${idx}`}>
-                  <TableCell className="font-mono text-sm">{entry.numero}</TableCell>
-                  <TableCell>{entry.nome}</TableCell>
-                  <TableCell>{entry.date}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    R$ {entry.value}
+                <TableRow key={`${entry.numero}-${entry.date}-${idx}`} className="hover:bg-muted/30">
+                  <TableCell>
+                    <button
+                      onClick={() => handleClickNumero(entry.numero)}
+                      className="font-mono text-sm hover:underline hover:text-primary transition-colors"
+                    >
+                      {entry.numero}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleClickName(entry.nome)}
+                      className="font-medium hover:underline transition-colors"
+                      style={{ color: nameColorMap[entry.nome] }}
+                    >
+                      {entry.nome}
+                    </button>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{entry.date}</TableCell>
+                  <TableCell className="text-right font-semibold">
+                    R$ {parseFloat(entry.value.replace(",", ".")).toFixed(2).replace(".", ",")}
                   </TableCell>
                 </TableRow>
               ))}
