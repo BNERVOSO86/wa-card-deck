@@ -62,8 +62,14 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
 
   useEffect(() => {
     if (phone) {
-      const history = phone.historicorecarga ? JSON.parse(phone.historicorecarga) : [];
-      setRechargeHistory(Array.isArray(history) ? history : []);
+      let history: string[] = [];
+      const raw = phone.historicorecarga as unknown;
+      if (Array.isArray(raw)) {
+        history = raw as string[];
+      } else if (typeof raw === 'string' && raw) {
+        try { const parsed = JSON.parse(raw); history = Array.isArray(parsed) ? parsed : []; } catch { history = []; }
+      }
+      setRechargeHistory(history);
       
       reset({
         nome: phone.nome,
