@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, X, CalendarIcon } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, X, CalendarIcon, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePhoneNumbers } from "@/hooks/useCelctrl";
+import { usePhoneNumbers, useUpdatePhoneNumber } from "@/hooks/useCelctrl";
 import { parse, isAfter, isBefore, isEqual } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 
 interface RechargeEntry {
   numero: string;
@@ -39,6 +50,7 @@ const NAME_COLORS = [
 
 const HistoricoRecargas = () => {
   const { data: phones, isLoading } = usePhoneNumbers();
+  const updatePhone = useUpdatePhoneNumber();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNumber, setSelectedNumber] = useState<string>("all");
   const [selectedName, setSelectedName] = useState<string>("all");
@@ -46,6 +58,7 @@ const HistoricoRecargas = () => {
   const [dateTo, setDateTo] = useState("");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [deleteEntry, setDeleteEntry] = useState<RechargeEntry | null>(null);
 
   const allEntries = useMemo(() => {
     if (!phones) return [];
@@ -204,6 +217,41 @@ const HistoricoRecargas = () => {
     setDateTo("");
   };
 
+  const handleDeleteEntry = useCallback(async () => {
+    if (!deleteEntry || !phones) return;
+    const phone = phones.find((p) => p.numero === deleteEntry.numero);
+    if (!phone) return;
+
+    try {
+      const raw = phone.historicorecarga as unknown;
+      let rawItems: unknown[] = [];
+      if (Array.isArray(raw)) rawItems = raw;
+      else if (typeof raw === "string") {
+        try { rawItems = JSON.parse(raw); } catch { /* skip */ }
+      }
+
+      const newItems = rawItems.filter((ri) => {
+        let item: { date?: string; value?: string } | null = null;
+        if (typeof ri === "string") {
+          try { item = JSON.parse(ri); } catch { return true; }
+        } else {
+          item = ri as { date?: string; value?: string };
+        }
+        return !(item?.date === deleteEntry.date && item?.value === deleteEntry.value);
+      });
+
+      await updatePhone.mutateAsync({
+        id: phone.id,
+        data: { historicorecarga: JSON.stringify(newItems) },
+      });
+
+      toast({ title: "Sucesso", description: "Registro de recarga excluído!" });
+    } catch {
+      toast({ title: "Erro", description: "Erro ao excluir registro.", variant: "destructive" });
+    }
+    setDeleteEntry(null);
+  }, [deleteEntry, phones, updatePhone]);
+
   return (
     <div className="p-6 space-y-5">
       <div>
@@ -340,6 +388,7 @@ const HistoricoRecargas = () => {
                     Valor <SortIcon field="value" />
                   </button>
                 </TableHead>
+                <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -366,12 +415,43 @@ const HistoricoRecargas = () => {
                   <TableCell className="text-right font-semibold">
                     R$ {parseFloat(entry.value.replace(",", ".")).toFixed(2).replace(".", ",")}
                   </TableCell>
+                  <TableCell className="text-center">
+                    <button
+                      onClick={() => setDeleteEntry(entry)}
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded hover:bg-destructive/10"
+                      title="Excluir registro"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       )}
+
+      <AlertDialog open={!!deleteEntry} onOpenChange={(open) => !open && setDeleteEntry(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir registro</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja apagar o registro?
+              {deleteEntry && (
+                <span className="block mt-2 font-medium text-foreground">
+                  {deleteEntry.numero} — {deleteEntry.date} — R$ {parseFloat(deleteEntry.value.replace(",", ".")).toFixed(2).replace(".", ",")}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteEntry} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
