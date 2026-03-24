@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Smartphone, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Smartphone, FileText, History } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ const items = [
   { title: "Painel de Controle", url: "/", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Números", url: "/numeros", icon: Smartphone },
+  { title: "Histórico Recargas", url: "/historico-recargas", icon: History },
   { title: "Documentação", url: "/documentacao", icon: FileText },
 ];
 
