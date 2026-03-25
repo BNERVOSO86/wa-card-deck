@@ -17,6 +17,7 @@ import { usePhoneNumbers, useDeletePhoneNumber, PhoneNumber } from "@/hooks/useC
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "disconnected">("all");
+  const [tipoFilter, setTipoFilter] = useState<"all" | "PRE" | "POS">("all");
   const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
@@ -34,7 +35,10 @@ const Index = () => {
       (statusFilter === "connected" && phone.status === "connected") ||
       (statusFilter === "disconnected" && phone.status === "disconnected");
 
-    return matchesSearch && matchesStatus;
+    const matchesTipo =
+      tipoFilter === "all" || phone.tipo === tipoFilter;
+
+    return matchesSearch && matchesStatus && matchesTipo;
   });
 
   const handleEdit = (phone: PhoneNumber) => {
@@ -96,6 +100,20 @@ const Index = () => {
                 <DropdownMenuItem onClick={() => setStatusFilter("all")}>Todos</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter("connected")}>Conectados</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setStatusFilter("disconnected")}>Desconectados</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-border">
+                  {tipoFilter === "all" ? "Tipo" : tipoFilter === "PRE" ? "Pré Pago" : "Pós Pago"}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setTipoFilter("all")}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTipoFilter("PRE")}>Pré Pago</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTipoFilter("POS")}>Pós Pago</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
