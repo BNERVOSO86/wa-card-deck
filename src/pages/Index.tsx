@@ -17,6 +17,7 @@ import { usePhoneNumbers, useDeletePhoneNumber, PhoneNumber } from "@/hooks/useC
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "disconnected">("all");
+  const [tipoFilter, setTipoFilter] = useState<"all" | "PRE" | "POS">("all");
   const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
