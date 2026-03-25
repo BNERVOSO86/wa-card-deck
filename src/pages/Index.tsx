@@ -35,7 +35,10 @@ const Index = () => {
       (statusFilter === "connected" && phone.status === "connected") ||
       (statusFilter === "disconnected" && phone.status === "disconnected");
 
-    return matchesSearch && matchesStatus;
+    const matchesTipo =
+      tipoFilter === "all" || phone.tipo === tipoFilter;
+
+    return matchesSearch && matchesStatus && matchesTipo;
   });
 
   const handleEdit = (phone: PhoneNumber) => {
