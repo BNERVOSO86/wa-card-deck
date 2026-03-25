@@ -102,6 +102,20 @@ const Index = () => {
                 <DropdownMenuItem onClick={() => setStatusFilter("disconnected")}>Desconectados</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-border">
+                  {tipoFilter === "all" ? "Tipo" : tipoFilter === "PRE" ? "Pré Pago" : "Pós Pago"}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setTipoFilter("all")}>Todos</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTipoFilter("PRE")}>Pré Pago</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTipoFilter("POS")}>Pós Pago</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
