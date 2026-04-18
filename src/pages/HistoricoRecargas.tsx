@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, X, CalendarIcon, Trash2 } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown, X, CalendarIcon, Trash2, Plus } from "lucide-react";
+import { AddRechargeDialog } from "@/components/AddRechargeDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const HistoricoRecargas = () => {
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [deleteEntry, setDeleteEntry] = useState<RechargeEntry | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const allEntries = useMemo(() => {
     if (!phones) return [];
@@ -254,12 +256,19 @@ const HistoricoRecargas = () => {
 
   return (
     <div className="p-6 space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Histórico de Recargas</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Visualize todas as recargas realizadas em todos os números
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Histórico de Recargas</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Visualize todas as recargas realizadas em todos os números
+          </p>
+        </div>
+        <Button onClick={() => setAddOpen(true)} className="bg-primary hover:bg-primary/90">
+          <Plus className="h-4 w-4 mr-1" /> Incluir Recarga
+        </Button>
       </div>
+
+      <AddRechargeDialog open={addOpen} onOpenChange={setAddOpen} phones={phones} />
 
       {/* Filters */}
       <div className="bg-card border border-border rounded-lg p-4 space-y-3">
