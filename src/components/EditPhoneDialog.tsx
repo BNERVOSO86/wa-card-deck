@@ -330,8 +330,7 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
                 {rechargeHistory.map((entry, index) => {
                   try {
                     const parsed = JSON.parse(entry);
-                    const date = new Date(parsed.date);
-                    const formattedDate = date.toLocaleDateString('pt-BR');
+                    const formattedDate = parsed.date || '';
                     const value = parsed.value ? `R$ ${parseFloat(parsed.value).toFixed(2)}` : '';
                     
                     return (
@@ -352,10 +351,9 @@ export const EditPhoneDialog = ({ phone, open, onOpenChange }: EditPhoneDialogPr
                     );
                   } catch {
                     // Handle old format (just date string)
-                    const date = new Date(entry);
                     return (
                       <div key={index} className="flex items-center justify-between text-sm bg-muted p-2 rounded">
-                        <span>{date.toLocaleDateString('pt-BR')}</span>
+                        <span>{entry}</span>
                         <Button
                           type="button"
                           variant="ghost"
