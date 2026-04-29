@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, RefreshCw, ChevronDown } from "lucide-react";
+import { Search, RefreshCw, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneCard } from "@/components/PhoneCard";
 import { AddPhoneDialog } from "@/components/AddPhoneDialog";
 import { EditPhoneDialog } from "@/components/EditPhoneDialog";
+import { AddRechargeDialog } from "@/components/AddRechargeDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ const Index = () => {
   const [tipoFilter, setTipoFilter] = useState<"all" | "PRE" | "POS">("all");
   const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addRechargeOpen, setAddRechargeOpen] = useState(false);
   
   const { data: phones, isLoading, refetch } = usePhoneNumbers();
   const deletePhone = useDeletePhoneNumber();
@@ -39,6 +41,20 @@ const Index = () => {
       tipoFilter === "all" || phone.tipo === tipoFilter;
 
     return matchesSearch && matchesStatus && matchesTipo;
+  })?.sort((a, b) => {
+    // Order by oldest recharge first (most days since recharge → top)
+    const parse = (s: string) => {
+      if (!s || s === "Sem recarga") return null;
+      const [d, m, y] = s.split("/");
+      if (!d || !m || !y) return null;
+      return new Date(parseInt(y), parseInt(m) - 1, parseInt(d)).getTime();
+    };
+    const ta = parse(a.ultimarecarga);
+    const tb = parse(b.ultimarecarga);
+    if (ta === null && tb === null) return 0;
+    if (ta === null) return -1; // sem recarga vai pro topo (mais "antigo")
+    if (tb === null) return 1;
+    return ta - tb; // mais antigo primeiro
   });
 
   const handleEdit = (phone: PhoneNumber) => {
@@ -61,14 +77,23 @@ const Index = () => {
               <span className="text-foreground">Números</span>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center gap-2 text-sm pt-2">
                 <span className="text-muted-foreground">{phones?.length || 0} / 10</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              <AddPhoneDialog />
+              <div className="flex flex-col gap-2">
+                <AddPhoneDialog />
+                <Button
+                  onClick={() => setAddRechargeOpen(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Recarga
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -156,6 +181,12 @@ const Index = () => {
           phone={editingPhone}
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
+        />
+
+        <AddRechargeDialog
+          open={addRechargeOpen}
+          onOpenChange={setAddRechargeOpen}
+          phones={phones}
         />
       </div>
     </div>
