@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, RefreshCw, ChevronDown } from "lucide-react";
+import { Search, RefreshCw, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneCard } from "@/components/PhoneCard";
 import { AddPhoneDialog } from "@/components/AddPhoneDialog";
 import { EditPhoneDialog } from "@/components/EditPhoneDialog";
+import { AddRechargeDialog } from "@/components/AddRechargeDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
