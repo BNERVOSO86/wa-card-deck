@@ -182,6 +182,12 @@ const Index = () => {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
         />
+
+        <AddRechargeDialog
+          open={addRechargeOpen}
+          onOpenChange={setAddRechargeOpen}
+          phones={phones}
+        />
       </div>
     </div>
   );
