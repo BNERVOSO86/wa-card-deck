@@ -41,6 +41,20 @@ const Index = () => {
       tipoFilter === "all" || phone.tipo === tipoFilter;
 
     return matchesSearch && matchesStatus && matchesTipo;
+  })?.sort((a, b) => {
+    // Order by oldest recharge first (most days since recharge → top)
+    const parse = (s: string) => {
+      if (!s || s === "Sem recarga") return null;
+      const [d, m, y] = s.split("/");
+      if (!d || !m || !y) return null;
+      return new Date(parseInt(y), parseInt(m) - 1, parseInt(d)).getTime();
+    };
+    const ta = parse(a.ultimarecarga);
+    const tb = parse(b.ultimarecarga);
+    if (ta === null && tb === null) return 0;
+    if (ta === null) return -1; // sem recarga vai pro topo (mais "antigo")
+    if (tb === null) return 1;
+    return ta - tb; // mais antigo primeiro
   });
 
   const handleEdit = (phone: PhoneNumber) => {
