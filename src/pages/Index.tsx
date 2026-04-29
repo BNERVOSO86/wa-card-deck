@@ -77,14 +77,23 @@ const Index = () => {
               <span className="text-foreground">Números</span>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center gap-2 text-sm pt-2">
                 <span className="text-muted-foreground">{phones?.length || 0} / 10</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              <AddPhoneDialog />
+              <div className="flex flex-col gap-2">
+                <AddPhoneDialog />
+                <Button
+                  onClick={() => setAddRechargeOpen(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Recarga
+                </Button>
+              </div>
             </div>
           </div>
         </div>
