@@ -21,6 +21,7 @@ const Index = () => {
   const [tipoFilter, setTipoFilter] = useState<"all" | "PRE" | "POS">("all");
   const [editingPhone, setEditingPhone] = useState<PhoneNumber | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addRechargeOpen, setAddRechargeOpen] = useState(false);
   
   const { data: phones, isLoading, refetch } = usePhoneNumbers();
   const deletePhone = useDeletePhoneNumber();
